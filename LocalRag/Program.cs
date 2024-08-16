@@ -13,16 +13,26 @@ using Microsoft.SemanticKernel.Memory;
 using Microsoft.SemanticKernel.Plugins.Memory;
 using SmartComponents.LocalEmbeddings.SemanticKernel;
 
+
+
+//await LocalRAGBruno.Execute(); 
+
 // Your PHI-3 model location 
-var modelPath = @"C:\github\Phi-3-mini-4k-instruct-onnx\cpu_and_mobile\cpu-int4-rtn-block-32";
+var modelPath = @"C:\git\joslat\LocalRag\phi3\Phi-3-mini-4k-instruct-onnx\cpu_and_mobile\cpu-int4-rtn-block-32";
 var modelId = "localphi3onnx";
+
+var textModelPath = @"C:\git\joslat\LocalRag\bge-micro-v2\onnx\model.onnx";
+var foo = @"C:\git\joslat\LocalRag\bge-micro-v2\vocab.txt";
+
+
 
 // Load the model and services
 var builder = Kernel.CreateBuilder();
 builder.AddOnnxRuntimeGenAIChatCompletion(modelId, modelPath);
-// builder.AddOnnxRuntimeGenAIChatCompletion(modelPath);
-builder.AddLocalTextEmbeddingGeneration();
-
+//builder.AddOnnxRuntimeGenAIChatCompletion(modelPath);
+//builder.AddBertOnnxTextEmbeddingGeneration(modelId, modelPath);
+//builder.AddLocalTextEmbeddingGeneration();
+builder.AddBertOnnxTextEmbeddingGeneration(textModelPath, foo);
 // Build Kernel
 var kernel = builder.Build();
 
@@ -33,6 +43,15 @@ var embeddingGenerator = kernel.GetRequiredService<ITextEmbeddingGenerationServi
 // Setup a memory store and create a memory out of it
 var memoryStore = new VolatileMemoryStore();
 var memory = new SemanticTextMemory(memoryStore, embeddingGenerator);
+
+//test adding memory
+const string MemoryCollectionName = "fanFacts";
+await memory.SaveInformationAsync(MemoryCollectionName, id: "info1", text: "Gisela's favourite super hero is Batman");
+await memory.SaveInformationAsync(MemoryCollectionName, id: "info2", text: "The last super hero movie watched by Gisela was Guardians of the Galaxy Vol 3");
+await memory.SaveInformationAsync(MemoryCollectionName, id: "info3", text: "Bruno's favourite super hero is Invincible");
+
+
+
 
 // Loading it for Save, Recall and other methods
 kernel.ImportPluginFromObject(new TextMemoryPlugin(memory));
